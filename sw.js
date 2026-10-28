@@ -31,8 +31,7 @@ function parseRange(header, size) {
   let start = Number(left || 0);
   let end;
   if (right) end = Math.min(Number(right), size - 1);
-  else if (start >= Math.max(0, size - TAIL_HINT)) end = size - 1;
-  else end = Math.min(size - 1, start + RANGE_WINDOW - 1);
+  else end = size - 1;
   start = Math.max(0, Math.min(start, size - 1));
   end = Math.max(start, end);
   return { start, end, partial: true };
@@ -81,36 +80,39 @@ async function serveMedia(event, chatId, msgId) {
     if (!size) return new Response("没有影片", { status: 404 });
     const range = parseRange(event.request.headers.get("range"), size);
     const length = range.end - range.start + 1;
-    const parts = [];
-    let got = 0;
-    while (got < length) {
-      const n = Math.min(512 * 1024, length - got);
-      const read = await askClient(
-        event,
-        { op: "read", chatId, msgId, start: range.start + got, length: n },
-        60000
-      );
-      const bytes = copyBytes(read);
-      if (bytes.byteLength !== n) {
-        return new Response("影片数据不完整", { status: 502 });
-      }
-      parts.push(bytes);
-      got += bytes.byteLength;
-    }
-    const body = new Uint8Array(length);
-    let offset = 0;
-    for (const part of parts) {
-      body.set(part, offset);
-      offset += part.byteLength;
-    }
-    const headers = {
-      "Accept-Ranges": "bytes",
-      "Content-Type": "video/mp4",
-      "Content-Length": String(length),
-      "Content-Range": `bytes ${range.start}-${range.end}/${size}`,
-      "Cache-Control": "private, no-store",
-    };
-    return new Response(body, { status: 206, headers });
+    let pos = range.start;
+    const stream = new ReadableStream({
+      async pull(controller) {
+        if (pos > range.end) {
+          controller.close();
+          return;
+        }
+        const n = Math.min(256 * 1024, range.end - pos + 1);
+        const read = await askClient(
+          event,
+          { op: "read", chatId, msgId, start: pos, length: n },
+          45000
+        );
+        const bytes = copyBytes(read);
+        if (!bytes.byteLength) {
+          controller.error(new Error("影片数据中断"));
+          return;
+        }
+        controller.enqueue(bytes);
+        pos += bytes.byteLength;
+        if (pos > range.end) controller.close();
+      },
+    });
+    return new Response(stream, {
+      status: 206,
+      headers: {
+        "Accept-Ranges": "bytes",
+        "Content-Type": "video/mp4",
+        "Content-Length": String(length),
+        "Content-Range": `bytes ${range.start}-${range.end}/${size}`,
+        "Cache-Control": "private, no-store",
+      },
+    });
   } catch (err) {
     return new Response(String(err && err.message ? err.message : err), { status: 502 });
   }
