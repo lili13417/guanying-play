@@ -13,8 +13,8 @@
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-  <script type="module" crossorigin src="./assets/index-Chft2cf2.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-C_luwjRr.css">
+  <script type="module" crossorigin src="./assets/index-BCHMSyPP.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-7yZI4dCq.css">
 </head>
 <body>
   <div id="wxGate" class="wx-gate hidden">
@@ -112,7 +112,8 @@
   </div>
 
   <div id="playerView" class="player-screen hidden">
-    <button type="button" class="back-fab" id="backPlayer">返回</button>
+    <button type="button" class="back-fab" id="backPlayer" onclick="if (window.__closePlayer) window.__closePlayer()">返回</button>
+    <div class="quality-bar" id="qualityBar"></div>
     <video
       id="mainPlayer"
       class="stage"
