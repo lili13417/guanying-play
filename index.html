@@ -13,8 +13,8 @@
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-  <script type="module" crossorigin src="./assets/index-D9UOSTky.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BhrDcD78.css">
+  <script type="module" crossorigin src="./assets/index-CBlArylC.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Qw15iJuh.css">
 </head>
 <body>
   <div id="wxGate" class="wx-gate hidden">
@@ -157,14 +157,17 @@
         }).then(function () { location.reload(); });
       }
     }
-    document.addEventListener("click", function (event) {
+    function leavePlayer(event) {
       var node = event.target;
       while (node && node !== document) {
         if (node.id === "backPlayer") {
           event.preventDefault();
           if (window.__closePlayer) window.__closePlayer();
           var view = document.getElementById("playerView");
-          if (view) view.classList.add("hidden");
+          if (view) {
+            view.classList.add("hidden");
+            view.classList.remove("can-play");
+          }
           var video = document.getElementById("mainPlayer");
           if (video) {
             video.pause();
@@ -175,7 +178,9 @@
         }
         node = node.parentNode;
       }
-    }, true);
+    }
+    document.addEventListener("click", leavePlayer, true);
+    document.addEventListener("touchend", leavePlayer, true);
   </script>
 </body>
 </html>
