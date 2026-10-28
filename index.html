@@ -13,8 +13,8 @@
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-  <script type="module" crossorigin src="./assets/index-Bb9eTwl2.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-D-aVokmd.css">
+  <script type="module" crossorigin src="./assets/index-B_aztRBM.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BhrDcD78.css">
 </head>
 <body>
   <div id="wxGate" class="wx-gate hidden">
@@ -116,7 +116,7 @@
       <button type="button" class="back-fab" id="backPlayer">返回</button>
       <div class="quality-bar" id="qualityBar"></div>
     </div>
-    <div class="load-track" aria-hidden="true"><div id="loadBar"></div></div>
+    <div class="load-track"><div id="loadBar"></div><span id="loadText">已加载 0%</span></div>
     <video
       id="mainPlayer"
       class="stage"
@@ -148,5 +148,34 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
+  <script>
+    if (!sessionStorage.getItem("gy-fresh")) {
+      sessionStorage.setItem("gy-fresh", "1");
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistrations().then(function (list) {
+          return Promise.all(list.map(function (reg) { return reg.unregister(); }));
+        }).then(function () { location.reload(); });
+      }
+    }
+    document.addEventListener("click", function (event) {
+      var node = event.target;
+      while (node && node !== document) {
+        if (node.id === "backPlayer") {
+          event.preventDefault();
+          if (window.__closePlayer) window.__closePlayer();
+          var view = document.getElementById("playerView");
+          if (view) view.classList.add("hidden");
+          var video = document.getElementById("mainPlayer");
+          if (video) {
+            video.pause();
+            video.removeAttribute("src");
+            try { video.load(); } catch (e) {}
+          }
+          return;
+        }
+        node = node.parentNode;
+      }
+    }, true);
+  </script>
 </body>
 </html>
